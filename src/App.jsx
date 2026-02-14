@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import {
   GATE_ACCESS_CODE,
   PHOTO_PATHS,
@@ -123,18 +123,142 @@ function useIsMobile(breakpointPx = 768) {
   return isMobile;
 }
 
-function Layout({ title, children }) {
+function CursorHeartTrail() {
+  const layerRef = useRef(null);
+
+  useEffect(() => {
+    const layer = layerRef.current;
+    if (!layer) return undefined;
+
+    let lastEmittedAt = 0;
+
+    const handlePointerMove = (event) => {
+      const now = performance.now();
+      if (now - lastEmittedAt < 22) return;
+      lastEmittedAt = now;
+
+      const heart = document.createElement("span");
+      heart.className = "cursor-heart";
+      heart.textContent = "❤";
+      heart.style.left = `${event.clientX}px`;
+      heart.style.top = `${event.clientY}px`;
+      heart.style.fontSize = `${22 + Math.random() * 16}px`;
+      heart.style.setProperty("--heart-x", `${(Math.random() - 0.5) * 38}px`);
+      heart.style.setProperty("--heart-y", `${18 + Math.random() * 34}px`);
+      heart.style.setProperty("--heart-rotate", `${(Math.random() - 0.5) * 36}deg`);
+      layer.appendChild(heart);
+
+      window.setTimeout(() => {
+        heart.remove();
+      }, 1500);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    return () => window.removeEventListener("pointermove", handlePointerMove);
+  }, []);
+
+  return <div ref={layerRef} className="cursor-heart-layer" aria-hidden="true" />;
+}
+
+function Layout({
+  title,
+  children,
+  showFloatingHearts = false,
+  showFloatingAssets = false,
+  showRainHeartsBackdrop = false,
+  floatingAssetPaths = [],
+  centerOnPage = false,
+  titleImageSrc = "",
+  titleImageAlt = "",
+}) {
+  const hearts = ["heart-1", "heart-2", "heart-3", "heart-4", "heart-5", "heart-6"];
+  const shellClassName = [
+    "page-shell",
+    showFloatingHearts ? "page-shell-hearts" : "",
+    showFloatingAssets ? "page-shell-assets" : "",
+    showRainHeartsBackdrop ? "page-shell-rain-hearts" : "",
+    centerOnPage ? "page-shell-centered" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <main className="page">
-      <h1>{title}</h1>
-      <section className="content">{children}</section>
-    </main>
+    <div className={shellClassName}>
+      {showRainHeartsBackdrop ? (
+        <div className="rain-hearts-backdrop" aria-hidden="true" />
+      ) : null}
+      {showFloatingHearts ? (
+        <div className="floating-hearts" aria-hidden="true">
+          {hearts.map((heartClass) => (
+            <span key={heartClass} className={`floating-heart ${heartClass}`}>
+              ❤
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {showFloatingAssets ? (
+        <div className="floating-assets" aria-hidden="true">
+          {floatingAssetPaths.map((assetPath, index) => (
+            <img
+              key={`${assetPath}-${index}`}
+              src={assetPath}
+              alt=""
+              className="floating-asset"
+              loading="lazy"
+              decoding="async"
+              style={{
+                "--start-x": (index * 17 + 9) % 100,
+                "--start-y": (index * 29 + 11) % 100,
+                "--drift-x":
+                  (index % 2 === 0 ? 1 : -1) * (8 + ((index + 1) % 5) * 3),
+                "--drift-y":
+                  (index % 3 === 0 ? 1 : -1) * (7 + ((index + 2) % 4) * 3),
+                "--duration": 14 + (index % 6) * 2.4,
+                "--delay": -(index * 1.6),
+                "--size": 108 + ((index + 3) % 6) * 20,
+                "--tilt": (index % 2 === 0 ? 1 : -1) * (6 + (index % 5) * 3),
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
+      <main className="page">
+        {titleImageSrc ? (
+          <img
+            src={titleImageSrc}
+            alt={titleImageAlt || title}
+            className="page-title-image"
+          />
+        ) : (
+          <h1>{title}</h1>
+        )}
+        <section className="content">{children}</section>
+      </main>
+    </div>
   );
 }
 
 function GatePage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const landingAssetPaths = [
+    "/assets/bugcat-capoo-holding-hearts.gif",
+    "/assets/huggy.gif",
+    "/assets/just_heart.gif",
+    "/assets/kissing.gif",
+    "/assets/kissy.gif",
+    "/assets/licking-cat.gif",
+    "/assets/bugcat-capoo-holding-hearts.gif",
+    "/assets/huggy.gif",
+    "/assets/just_heart.gif",
+    "/assets/kissing.gif",
+    "/assets/kissy.gif",
+    "/assets/licking-cat.gif",
+    "/assets/bugcat-capoo-holding-hearts.gif",
+    "/assets/huggy.gif",
+    "/assets/just_heart.gif",
+    "/assets/kissing.gif",
+  ];
   const codeLength = GATE_ACCESS_CODE.length;
   const [codeDigits, setCodeDigits] = useState(Array(codeLength).fill(""));
   const [accessLink, setAccessLink] = useState("");
@@ -143,6 +267,11 @@ function GatePage() {
   const [copied, setCopied] = useState(false);
   const codeInputRefs = useRef([]);
   const codeValue = codeDigits.join("");
+
+  useEffect(() => {
+    // Returning to home always starts a fresh run.
+    resetExperienceStorage();
+  }, []);
 
   const focusCodeInput = (index) => {
     const input = codeInputRefs.current[index];
@@ -233,7 +362,12 @@ function GatePage() {
   };
 
   return (
-    <Layout title="Valentine's Gate">
+    <Layout
+      title="Valentine's Gate"
+      centerOnPage
+      showFloatingAssets
+      floatingAssetPaths={landingAssetPaths}
+    >
       {isMobile ? (
         <div className="mobile-riddle-card">
           <p className="mobile-riddle-title">Riddle Placeholder</p>
@@ -307,7 +441,7 @@ function GamePage() {
     ? shotAlbum.find((entry) => entry.shotNumber === latestShot.shotNumber)
         ?.caption ?? ""
     : "";
-  const canReload = currentCaption.trim().length > 0;
+  const canProceed = currentCaption.trim().length > 0;
   const currentWorldPath = WORLD_PATHS.length
     ? WORLD_PATHS[currentPhotoIndex % WORLD_PATHS.length]
     : "";
@@ -338,12 +472,6 @@ function GamePage() {
   };
 
   useEffect(() => {
-    if (shotCount >= 10 && latestShot) {
-      navigate("/valentines");
-    }
-  }, [latestShot, navigate, shotCount]);
-
-  useEffect(() => {
     if (shotCount < 10 || latestShot) return;
 
     // If a completed run returns to /game, start a fresh run.
@@ -354,6 +482,11 @@ function GamePage() {
   }, [latestShot, shotCount]);
 
   const handleReloadExperience = () => {
+    if (shotCount >= 10) {
+      navigate("/valentines");
+      return;
+    }
+
     if (PHOTO_PATHS.length) {
       const nextIndex = (currentPhotoIndex + 1) % PHOTO_PATHS.length;
       window.localStorage.setItem(PHOTO_INDEX_STORAGE_KEY, String(nextIndex));
@@ -444,7 +577,6 @@ function GamePage() {
       onPointerDown={triggerShutter}
     >
       <div className="game-hud">
-        <Link to="/">Back to gate</Link>
         <p>Move to aim, then click or tap to snap a shot.</p>
         <p className="shot-count">Shots taken: {shotCount}/10</p>
       </div>
@@ -485,10 +617,10 @@ function GamePage() {
             type="button"
             className="reload-bubble-button"
             onPointerDown={(event) => event.stopPropagation()}
-            disabled={!canReload}
+            disabled={!canProceed}
             onClick={handleReloadExperience}
           >
-            reload
+            {shotCount >= 10 ? "develop" : "reload"}
           </button>
         </div>
       ) : null}
@@ -513,9 +645,11 @@ function GamePage() {
 }
 
 function ValentinesPage() {
-  const navigate = useNavigate();
   const [shotAlbum, setShotAlbum] = useState(() =>
     loadStoredShotAlbum()
+  );
+  const captionByPhotoPath = new Map(
+    shotAlbum.map((entry) => [entry.photoPath, entry.caption])
   );
 
   useEffect(() => {
@@ -523,26 +657,26 @@ function ValentinesPage() {
   }, []);
 
   return (
-    <Layout title="Valentines">
-      <p>Memory review from your photo experience:</p>
-      <div className="button-row">
-        <button
-          type="button"
-          onClick={() => {
-            resetExperienceStorage();
-            setShotAlbum([]);
-            navigate("/game");
-          }}
-        >
-          Back to game
-        </button>
-      </div>
+    <Layout
+      title="Valentines"
+      titleImageSrc="/assets/happy_valentines.gif"
+      titleImageAlt="Happy Valentines"
+      showFloatingHearts
+      showRainHeartsBackdrop
+    >
+      <CursorHeartTrail />
       <div className="memory-review-grid">
-        {shotAlbum.map((entry) => (
-          <article key={entry.shotNumber} className="memory-review-card">
-            <img src={entry.photoPath} alt={`Memory ${entry.shotNumber}`} />
+        {PHOTO_PATHS.map((photoPath, index) => (
+          <article key={photoPath} className="memory-review-card">
+            <div className="memory-review-photo-wrap">
+              <img
+                src={photoPath}
+                alt={`Memory ${index + 1}`}
+                className="memory-review-photo"
+              />
+            </div>
             <p className="memory-caption">
-              {entry.caption || "No caption written yet."}
+              {captionByPhotoPath.get(photoPath) || "No caption written yet."}
             </p>
           </article>
         ))}

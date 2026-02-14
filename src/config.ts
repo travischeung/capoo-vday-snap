@@ -1,27 +1,29 @@
+// Insert Photos
 export const PHOTO_PATHS = [
-  "/photos/photo-01.jpg",
-  "/photos/photo-02.jpg",
-  "/photos/photo-03.jpg",
-  "/photos/photo-04.jpg",
-  "/photos/photo-05.jpg",
-  "/photos/photo-06.jpg",
-  "/photos/photo-07.jpg",
-  "/photos/photo-08.jpg",
-  "/photos/photo-09.jpg",
-  "/photos/photo-10.jpg",
+  "/photos/34thSt.JPG",
+  "/photos/gatsby.jpg",
+  "/photos/bambooForest.jpg",
+  "/photos/grandSt.jpg",
+  "/photos/japanDisney.JPG",
+  "/photos/miumiu.jpg",
+  "/photos/ryoken.JPG",
+  "/photos/zootopia.jpg",
+  "/photos/shinjuku.jpg",
+  "/photos/wedding.jpg",
 ];
 
+// Insert Backgrounds
 export const WORLD_PATHS = [
-  "/photos/world-01.jpg",
-  "/photos/world-02.jpg",
-  "/photos/world-03.jpg",
-  "/photos/world-04.jpg",
-  "/photos/world-05.jpg",
-  "/photos/world-06.jpg",
-  "/photos/world-07.jpg",
-  "/photos/world-08.jpg",
-  "/photos/world-09.jpg",
-  "/photos/world-10.jpg",
+  "/background/34th_background.webp",
+  "/background/9818_background.png",
+  "/background/bamboo_background.jpg",
+  "/background/grand_st_background.jpg",
+  "/background/toy_story_background.jpg",
+  "/background/miu_miu_background.jpg",
+  "/background/kyoto_onsen.jpg",
+  "/background/lower_east_side_background.jpg",
+  "/background/shinjuku_street.jpg",
+  "/background/wedding_background.png",
 ];
 
 export const PHOTO_ROLL_COUNT = PHOTO_PATHS.length;
