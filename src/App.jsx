@@ -14,6 +14,10 @@ const SHOT_COUNT_STORAGE_KEY = "hvd-shot-count";
 const GATE_INTRO_GIF_DURATION_MS = 2400;
 
 function assetPath(path) {
+  return `${import.meta.env.BASE_URL}${String(path).replace(/^\/+/, "")}`;
+}
+
+function assetPath(path) {
   return `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 }
 
@@ -416,12 +420,12 @@ function GatePage() {
     setIsUnlocking(true);
     try {
       const token = await deriveToken(codeValue);
-      const gamePathWithToken = `/game#${token}`;
-      const fullAccessLink = `${getGameBaseUrl()}#${token}`;
+      const gamePath = "/game";
+      const fullAccessLink = getGameBaseUrl();
       setAccessLink(fullAccessLink);
       setIsShowingIntroGif(true);
       introTimerRef.current = window.setTimeout(() => {
-        navigate(gamePathWithToken);
+        navigate(gamePath);
       }, GATE_INTRO_GIF_DURATION_MS);
     } catch (error) {
       console.error(error);
