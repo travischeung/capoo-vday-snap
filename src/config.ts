@@ -46,4 +46,4 @@ export const PHOTO_ROLL_COUNT = PHOTO_PATHS.length;
 export const TOKEN_DERIVATION_SECRET = "replace-me-before-production";
 
 // Hard-coded desktop gate code.
-export const GATE_ACCESS_CODE = "1234";
+export const GATE_ACCESS_CODE = "520";

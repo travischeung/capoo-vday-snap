@@ -17,10 +17,6 @@ function assetPath(path) {
   return `${import.meta.env.BASE_URL}${String(path).replace(/^\/+/, "")}`;
 }
 
-function assetPath(path) {
-  return `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
-}
-
 function loadStoredCaptions() {
   if (typeof window === "undefined") return {};
   try {
@@ -456,9 +452,13 @@ function GatePage() {
     >
       {isMobile ? (
         <div className="mobile-riddle-card">
-          <p className="mobile-riddle-title">
-            
-          </p>
+          <ol className="mobile-riddle-title">
+            <li>
+              ((3<sup>4</sup> - 5<sup>2</sup>) &divide; 8 + &radic;36) &divide; 2.6
+            </li>
+            <li>How many times have I met your parents?</li>
+            <li>How many Reze figurines have you given me?</li>
+          </ol>
         <p>
             
         </p>
@@ -473,7 +473,7 @@ function GatePage() {
         </div>
       ) : (
         <form className="gate-form" onSubmit={handleUnlock}>
-          <p className="code-label">Enter 4 digit code</p>
+          <p className="code-label">Enter 3 digit code</p>
           <div className="code-input-row">
             {codeDigits.map((digit, index) => (
               <input
