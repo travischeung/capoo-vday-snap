@@ -11,6 +11,7 @@ const CAPTIONS_STORAGE_KEY = "hvd-photo-captions";
 const SHOT_ALBUM_STORAGE_KEY = "hvd-shot-album";
 const PHOTO_INDEX_STORAGE_KEY = "hvd-next-photo-index";
 const SHOT_COUNT_STORAGE_KEY = "hvd-shot-count";
+const GATE_INTRO_GIF_DURATION_MS = 2400;
 
 function loadStoredCaptions() {
   if (typeof window === "undefined") return {};
@@ -87,6 +88,34 @@ function resetExperienceStorage() {
   window.localStorage.removeItem(SHOT_ALBUM_STORAGE_KEY);
   window.localStorage.removeItem(PHOTO_INDEX_STORAGE_KEY);
   window.localStorage.removeItem(SHOT_COUNT_STORAGE_KEY);
+}
+
+function downloadCaptionsJson(shotAlbum) {
+  if (typeof window === "undefined" || !Array.isArray(shotAlbum)) return;
+
+  const captionByPhotoPath = new Map(
+    shotAlbum.map((entry) => [entry.photoPath, entry.caption])
+  );
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    totalPhotos: PHOTO_PATHS.length,
+    captions: PHOTO_PATHS.map((photoPath, index) => ({
+      shotNumber: index + 1,
+      photoPath,
+      caption: captionByPhotoPath.get(photoPath) ?? "",
+    })),
+  };
+
+  const json = JSON.stringify(exportPayload, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = `valentines-captions-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(downloadUrl);
 }
 
 async function deriveToken(password) {
@@ -166,10 +195,13 @@ function Layout({
   showFloatingHearts = false,
   showFloatingAssets = false,
   showRainHeartsBackdrop = false,
+  showFallingPhotosBackdrop = false,
+  fallingPhotoPaths = [],
   floatingAssetPaths = [],
   centerOnPage = false,
   titleImageSrc = "",
   titleImageAlt = "",
+  hideTitle = false,
 }) {
   const hearts = ["heart-1", "heart-2", "heart-3", "heart-4", "heart-5", "heart-6"];
   const shellClassName = [
@@ -177,6 +209,7 @@ function Layout({
     showFloatingHearts ? "page-shell-hearts" : "",
     showFloatingAssets ? "page-shell-assets" : "",
     showRainHeartsBackdrop ? "page-shell-rain-hearts" : "",
+    showFallingPhotosBackdrop ? "page-shell-falling-photos" : "",
     centerOnPage ? "page-shell-centered" : "",
   ]
     .filter(Boolean)
@@ -186,6 +219,28 @@ function Layout({
     <div className={shellClassName}>
       {showRainHeartsBackdrop ? (
         <div className="rain-hearts-backdrop" aria-hidden="true" />
+      ) : null}
+      {showFallingPhotosBackdrop ? (
+        <div className="falling-photos-backdrop" aria-hidden="true">
+          {fallingPhotoPaths.map((photoPath, index) => (
+            <img
+              key={`${photoPath}-${index}`}
+              src={photoPath}
+              alt=""
+              className="falling-photo"
+              loading="lazy"
+              decoding="async"
+              style={{
+                "--fall-left": (index * 19 + 7) % 100,
+                "--fall-size": 68 + ((index + 2) % 5) * 18,
+                "--fall-duration": 10 + (index % 5) * 2.3,
+                "--fall-delay": -(index * 1.35),
+                "--fall-drift": (index % 2 === 0 ? 1 : -1) * (8 + (index % 4) * 4),
+                "--fall-tilt": (index % 2 === 0 ? 1 : -1) * (4 + (index % 4) * 3),
+              }}
+            />
+          ))}
+        </div>
       ) : null}
       {showFloatingHearts ? (
         <div className="floating-hearts" aria-hidden="true">
@@ -223,15 +278,17 @@ function Layout({
         </div>
       ) : null}
       <main className="page">
-        {titleImageSrc ? (
-          <img
-            src={titleImageSrc}
-            alt={titleImageAlt || title}
-            className="page-title-image"
-          />
-        ) : (
-          <h1>{title}</h1>
-        )}
+        {!hideTitle
+          ? titleImageSrc
+            ? (
+              <img
+                src={titleImageSrc}
+                alt={titleImageAlt || title}
+                className="page-title-image"
+              />
+            )
+            : <h1>{title}</h1>
+          : null}
         <section className="content">{children}</section>
       </main>
     </div>
@@ -264,13 +321,20 @@ function GatePage() {
   const [accessLink, setAccessLink] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [isShowingIntroGif, setIsShowingIntroGif] = useState(false);
   const [copied, setCopied] = useState(false);
   const codeInputRefs = useRef([]);
+  const introTimerRef = useRef(null);
   const codeValue = codeDigits.join("");
 
   useEffect(() => {
     // Returning to home always starts a fresh run.
     resetExperienceStorage();
+    return () => {
+      if (introTimerRef.current) {
+        window.clearTimeout(introTimerRef.current);
+      }
+    };
   }, []);
 
   const focusCodeInput = (index) => {
@@ -341,7 +405,10 @@ function GatePage() {
       const gamePathWithToken = `/game#${token}`;
       const fullAccessLink = `${getGameBaseUrl()}#${token}`;
       setAccessLink(fullAccessLink);
-      navigate(gamePathWithToken);
+      setIsShowingIntroGif(true);
+      introTimerRef.current = window.setTimeout(() => {
+        navigate(gamePathWithToken);
+      }, GATE_INTRO_GIF_DURATION_MS);
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not generate token. Try again.");
@@ -363,17 +430,28 @@ function GatePage() {
 
   return (
     <Layout
-      title="Valentine's Gate"
+      title="Happy Valentine's Day... You look so beautiful today!"
+      hideTitle={isShowingIntroGif}
       centerOnPage
       showFloatingAssets
       floatingAssetPaths={landingAssetPaths}
     >
       {isMobile ? (
         <div className="mobile-riddle-card">
-          <p className="mobile-riddle-title">Riddle Placeholder</p>
-          <p>
-            I can run but never walk, have a mouth but never talk. What am I?
+          <p className="mobile-riddle-title">
+            
           </p>
+        <p>
+            
+        </p>
+        </div>
+      ) : isShowingIntroGif ? (
+        <div className="gate-intro-gif-wrap" aria-live="polite">
+          <img
+            src="/assets/capoo_photo_subject.gif"
+            alt="Capoo getting camera subjects ready"
+            className="gate-intro-gif"
+          />
         </div>
       ) : (
         <form className="gate-form" onSubmit={handleUnlock}>
@@ -406,9 +484,9 @@ function GatePage() {
         </form>
       )}
 
-      {errorMessage ? <p className="error">{errorMessage}</p> : null}
+      {!isShowingIntroGif && errorMessage ? <p className="error">{errorMessage}</p> : null}
 
-      {accessLink ? (
+      {!isShowingIntroGif && accessLink ? (
         <div className="generated-link">
           <p>Access link:</p>
           <a href={accessLink}>{accessLink}</a>
@@ -648,6 +726,7 @@ function ValentinesPage() {
   const [shotAlbum, setShotAlbum] = useState(() =>
     loadStoredShotAlbum()
   );
+  const hasDownloadedCaptionsRef = useRef(false);
   const captionByPhotoPath = new Map(
     shotAlbum.map((entry) => [entry.photoPath, entry.caption])
   );
@@ -656,6 +735,12 @@ function ValentinesPage() {
     setShotAlbum(loadStoredShotAlbum());
   }, []);
 
+  useEffect(() => {
+    if (!shotAlbum.length || hasDownloadedCaptionsRef.current) return;
+    downloadCaptionsJson(shotAlbum);
+    hasDownloadedCaptionsRef.current = true;
+  }, [shotAlbum]);
+
   return (
     <Layout
       title="Valentines"
@@ -663,6 +748,14 @@ function ValentinesPage() {
       titleImageAlt="Happy Valentines"
       showFloatingHearts
       showRainHeartsBackdrop
+      showFallingPhotosBackdrop
+      fallingPhotoPaths={[
+        ...PHOTO_PATHS,
+        ...Array(10).fill("/assets/paws-cat.gif"),
+        ...Array(10).fill("/assets/seal-seal-slapping-belly.gif"),
+        ...Array(10).fill("/assets/dog-wag.gif"),
+        ...PHOTO_PATHS,
+      ]}
     >
       <CursorHeartTrail />
       <div className="memory-review-grid">

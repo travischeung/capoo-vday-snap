@@ -66,10 +66,49 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: url("/assets/rain-hearts.gif");
+  background-image: url("/assets/hearts-falling-gif.gif");
   background-repeat: repeat;
-  background-size: clamp(120px, 16vw, 220px) auto;
-  opacity: 0.44;
+  background-size: clamp(140px, 18vw, 240px) auto;
+  opacity: 0.6;
+}
+
+.page-shell-falling-photos {
+  isolation: isolate;
+}
+
+.falling-photos-backdrop {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.falling-photo {
+  position: absolute;
+  left: calc(var(--fall-left) * 1%);
+  top: -24vh;
+  width: clamp(62px, calc(var(--fall-size) * 1px), 160px);
+  height: auto;
+  border-radius: 12px;
+  opacity: 0.36;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.2);
+  animation: falling-photo-drop calc(var(--fall-duration) * 1s) linear infinite;
+  animation-delay: calc(var(--fall-delay) * 1s);
+}
+
+@keyframes falling-photo-drop {
+  0% {
+    transform: translateY(-18vh) translateX(0) rotate(calc(var(--fall-tilt) * -1deg));
+  }
+  50% {
+    transform: translateY(52vh) translateX(calc(var(--fall-drift) * 1vw))
+      rotate(calc(var(--fall-tilt) * 0.25deg));
+  }
+  100% {
+    transform: translateY(126vh) translateX(calc(var(--fall-drift) * -0.6vw))
+      rotate(calc(var(--fall-tilt) * 1deg));
+  }
 }
 
 .page-shell-assets {
@@ -352,6 +391,19 @@ button:disabled {
   margin: 0 0 0.4rem;
   font-weight: 700;
   color: #7d2f5a;
+}
+
+.gate-intro-gif-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 280px;
+}
+
+.gate-intro-gif {
+  width: min(560px, 100%);
+  height: auto;
+  display: block;
 }
 
 .game-world {
