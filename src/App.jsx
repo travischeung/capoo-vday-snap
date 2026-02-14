@@ -586,7 +586,7 @@ function GamePage() {
       setCurrentPhotoIndex(nextIndex);
     }
 
-    window.location.reload();
+    setLatestShot(null);
   };
 
   useEffect(() => {
