@@ -18,9 +18,6 @@ body {
 
 #root {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 2rem;
 }
 
 .page {
@@ -30,6 +27,7 @@ body {
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  margin: 2rem auto;
 }
 
 h1 {
@@ -50,4 +48,322 @@ h1 {
 
 .content {
   color: #334155;
+}
+
+.gate-form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.code-label {
+  font-weight: 600;
+  margin: 0;
+}
+
+.code-input-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.digit-input {
+  width: 3rem;
+  height: 3.25rem;
+  border: 1px solid #d8b4c7;
+  border-radius: 12px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.digit-input:focus {
+  outline: 2px solid #b41372;
+  outline-offset: 2px;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  background: #b41372;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #f1d7e8;
+  color: #7d2f5a;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.generated-link {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0dde8;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.generated-link a {
+  overflow-wrap: anywhere;
+  color: #1d4ed8;
+}
+
+.error {
+  margin-top: 0.8rem;
+  color: #be123c;
+  font-weight: 600;
+}
+
+.mobile-riddle-card {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 1.25rem;
+  border: 1px solid #efd8e6;
+  border-radius: 14px;
+  background: #fff0f7;
+  text-align: center;
+}
+
+.mobile-riddle-title {
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+  color: #7d2f5a;
+}
+
+.game-world {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 18% 25%, #9be7ff 0%, #74c2f3 28%, transparent 45%),
+    radial-gradient(circle at 80% 30%, #fef3c7 0%, #fde68a 18%, transparent 40%),
+    linear-gradient(180deg, #8fd3ff 0%, #a9e1ff 50%, #95d5b2 50%, #74c69d 100%);
+  cursor: crosshair;
+}
+
+.game-hud {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(201, 214, 241, 0.9);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  max-width: min(360px, calc(100vw - 2rem));
+}
+
+.game-hud p {
+  margin: 0.2rem 0 0;
+  color: #1f3d5b;
+}
+
+.game-hud a {
+  color: #0f3f67;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.shot-count {
+  font-weight: 700;
+  color: #1f3d5b;
+}
+
+.shutter-flash {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 60;
+  animation: shutter-flash 320ms ease-out;
+}
+
+@keyframes shutter-flash {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.capture-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: rgba(255, 251, 253, 0.84);
+  padding: 1rem;
+}
+
+.polaroid {
+  width: min(88vw, 760px);
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0.9rem 0.9rem 8rem;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+  transform-origin: center top;
+  animation: polaroid-drop 700ms ease-out;
+}
+
+.polaroid-fullscreen {
+  max-height: min(90vh, 960px);
+}
+
+.reload-bubble-button {
+  align-self: center;
+  border-radius: 999px;
+  padding: 0.85rem 1.15rem;
+  background: linear-gradient(180deg, #fbb6ce 0%, #f472b6 100%);
+  color: #fff;
+  border: 2px solid #fce7f3;
+  box-shadow: 0 8px 14px rgba(190, 24, 93, 0.25);
+  font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive;
+  font-size: 1.05rem;
+  text-transform: lowercase;
+}
+
+.reload-bubble-button:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+
+.polaroid-photo-wrap {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #f0f0f0;
+  position: relative;
+}
+
+.polaroid-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: polaroid-develop 6500ms ease-out;
+}
+
+.polaroid-caption-input {
+  margin-top: 0.9rem;
+  width: 100%;
+  min-height: 6.1rem;
+  border: 0;
+  resize: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  background: transparent;
+  color: #1f2937;
+  font-size: 1.55rem;
+  line-height: 1.25;
+  font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive;
+  outline: none;
+}
+
+.polaroid-caption-input::placeholder {
+  color: #64748b;
+}
+
+@keyframes polaroid-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) rotate(-2deg) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes polaroid-develop {
+  0% {
+    opacity: 0.05;
+    filter: brightness(1.6) saturate(0) blur(3px);
+  }
+  50% {
+    opacity: 0.7;
+    filter: brightness(1.2) saturate(0.4) blur(1px);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1) saturate(1) blur(0);
+  }
+}
+
+.viewfinder {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: min(320px, calc(100vw - 24px));
+  aspect-ratio: 4 / 3;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.28);
+  pointer-events: auto;
+  z-index: 25;
+  will-change: transform;
+  cursor: pointer;
+}
+
+.memory-review-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.memory-review-card {
+  background: #fff;
+  border: 1px solid #f0dde8;
+  border-radius: 12px;
+  padding: 0.7rem;
+}
+
+.memory-review-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.memory-caption {
+  margin: 0.55rem 0 0;
+  font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive;
+  font-size: 1.05rem;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1.2rem;
+    margin: 1rem;
+    width: auto;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+  }
 }
