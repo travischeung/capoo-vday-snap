@@ -66,7 +66,6 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: url("/assets/hearts-falling-gif.gif");
   background-repeat: repeat;
   background-size: clamp(140px, 18vw, 240px) auto;
   opacity: 0.6;
@@ -600,14 +599,12 @@ button:disabled {
   cursor: pointer;
 }
 
-.viewfinder::after {
-  content: "";
+.viewfinder-capoo {
   position: absolute;
   right: -20px;
   bottom: -30px;
   width: clamp(84px, 14vw, 140px);
-  aspect-ratio: 1 / 1;
-  background: url("/assets/capoo_camera.gif") center / contain no-repeat;
+  height: auto;
   pointer-events: none;
 }
 

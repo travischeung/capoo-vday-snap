@@ -66,6 +66,33 @@ You can edit:
 - `GATE_ACCESS_CODE`: home gate code
 - `TOKEN_DERIVATION_SECRET`: token derivation seed
 
+### Cloudinary / Env-based URLs (recommended)
+
+For photo privacy, you can keep personal photos out of this repo and inject URLs at runtime with Vite env vars.
+
+1. Copy `.env.example` to `.env.local`
+2. Fill in your Cloudinary URLs
+
+```bash
+cp .env.example .env.local
+```
+
+```bash
+# comma-separated
+VITE_PHOTO_URLS=https://res.cloudinary.com/<cloud>/image/upload/v1/photo1.jpg,https://res.cloudinary.com/<cloud>/image/upload/v1/photo2.jpg
+
+# optional world/background URLs
+VITE_WORLD_URLS=https://res.cloudinary.com/<cloud>/image/upload/v1/bg1.jpg,https://res.cloudinary.com/<cloud>/image/upload/v1/bg2.jpg
+```
+
+Supported formats for each env var:
+
+- comma-separated list
+- newline-separated list
+- JSON array string
+
+If env vars are empty, the app falls back to local defaults from `src/config.ts`.
+
 ## Assets
 
 Place media assets in `public/` so they are served at root-relative URLs:

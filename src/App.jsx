@@ -13,6 +13,10 @@ const PHOTO_INDEX_STORAGE_KEY = "hvd-next-photo-index";
 const SHOT_COUNT_STORAGE_KEY = "hvd-shot-count";
 const GATE_INTRO_GIF_DURATION_MS = 2400;
 
+function assetPath(path) {
+  return `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+}
+
 function loadStoredCaptions() {
   if (typeof window === "undefined") return {};
   try {
@@ -198,6 +202,7 @@ function Layout({
   showFallingPhotosBackdrop = false,
   fallingPhotoPaths = [],
   floatingAssetPaths = [],
+  rainHeartsBackgroundUrl = "",
   centerOnPage = false,
   titleImageSrc = "",
   titleImageAlt = "",
@@ -218,7 +223,15 @@ function Layout({
   return (
     <div className={shellClassName}>
       {showRainHeartsBackdrop ? (
-        <div className="rain-hearts-backdrop" aria-hidden="true" />
+        <div
+          className="rain-hearts-backdrop"
+          style={
+            rainHeartsBackgroundUrl
+              ? { backgroundImage: `url(${rainHeartsBackgroundUrl})` }
+              : undefined
+          }
+          aria-hidden="true"
+        />
       ) : null}
       {showFallingPhotosBackdrop ? (
         <div className="falling-photos-backdrop" aria-hidden="true">
@@ -298,23 +311,24 @@ function Layout({
 function GatePage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const capooIntroGifPath = assetPath("assets/capoo_photo_subject.gif");
   const landingAssetPaths = [
-    "/assets/bugcat-capoo-holding-hearts.gif",
-    "/assets/huggy.gif",
-    "/assets/just_heart.gif",
-    "/assets/kissing.gif",
-    "/assets/kissy.gif",
-    "/assets/licking-cat.gif",
-    "/assets/bugcat-capoo-holding-hearts.gif",
-    "/assets/huggy.gif",
-    "/assets/just_heart.gif",
-    "/assets/kissing.gif",
-    "/assets/kissy.gif",
-    "/assets/licking-cat.gif",
-    "/assets/bugcat-capoo-holding-hearts.gif",
-    "/assets/huggy.gif",
-    "/assets/just_heart.gif",
-    "/assets/kissing.gif",
+    assetPath("assets/bugcat-capoo-holding-hearts.gif"),
+    assetPath("assets/huggy.gif"),
+    assetPath("assets/just_heart.gif"),
+    assetPath("assets/kissing.gif"),
+    assetPath("assets/kissy.gif"),
+    assetPath("assets/licking-cat.gif"),
+    assetPath("assets/bugcat-capoo-holding-hearts.gif"),
+    assetPath("assets/huggy.gif"),
+    assetPath("assets/just_heart.gif"),
+    assetPath("assets/kissing.gif"),
+    assetPath("assets/kissy.gif"),
+    assetPath("assets/licking-cat.gif"),
+    assetPath("assets/bugcat-capoo-holding-hearts.gif"),
+    assetPath("assets/huggy.gif"),
+    assetPath("assets/just_heart.gif"),
+    assetPath("assets/kissing.gif"),
   ];
   const codeLength = GATE_ACCESS_CODE.length;
   const [codeDigits, setCodeDigits] = useState(Array(codeLength).fill(""));
@@ -448,7 +462,7 @@ function GatePage() {
       ) : isShowingIntroGif ? (
         <div className="gate-intro-gif-wrap" aria-live="polite">
           <img
-            src="/assets/capoo_photo_subject.gif"
+            src={capooIntroGifPath}
             alt="Capoo getting camera subjects ready"
             className="gate-intro-gif"
           />
@@ -504,6 +518,7 @@ function GatePage() {
 function GamePage() {
   const navigate = useNavigate();
   const viewfinderRef = useRef(null);
+  const viewfinderCapooGifPath = assetPath("assets/capoo_camera.gif");
   const shotIdRef = useRef(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [latestShot, setLatestShot] = useState(null);
@@ -716,7 +731,14 @@ function GamePage() {
               triggerShutter();
             }
           }}
-        />
+        >
+          <img
+            src={viewfinderCapooGifPath}
+            alt=""
+            className="viewfinder-capoo"
+            aria-hidden="true"
+          />
+        </div>
       ) : null}
     </main>
   );
@@ -726,6 +748,11 @@ function ValentinesPage() {
   const [shotAlbum, setShotAlbum] = useState(() =>
     loadStoredShotAlbum()
   );
+  const happyValentinesGifPath = assetPath("assets/happy_valentines.gif");
+  const pawsCatGifPath = assetPath("assets/paws-cat.gif");
+  const sealGifPath = assetPath("assets/seal-seal-slapping-belly.gif");
+  const dogWagGifPath = assetPath("assets/dog-wag.gif");
+  const heartsFallingGifPath = assetPath("assets/hearts-falling-gif.gif");
   const hasDownloadedCaptionsRef = useRef(false);
   const captionByPhotoPath = new Map(
     shotAlbum.map((entry) => [entry.photoPath, entry.caption])
@@ -744,16 +771,17 @@ function ValentinesPage() {
   return (
     <Layout
       title="Valentines"
-      titleImageSrc="/assets/happy_valentines.gif"
+      titleImageSrc={happyValentinesGifPath}
       titleImageAlt="Happy Valentines"
       showFloatingHearts
       showRainHeartsBackdrop
+      rainHeartsBackgroundUrl={heartsFallingGifPath}
       showFallingPhotosBackdrop
       fallingPhotoPaths={[
         ...PHOTO_PATHS,
-        ...Array(10).fill("/assets/paws-cat.gif"),
-        ...Array(10).fill("/assets/seal-seal-slapping-belly.gif"),
-        ...Array(10).fill("/assets/dog-wag.gif"),
+        ...Array(10).fill(pawsCatGifPath),
+        ...Array(10).fill(sealGifPath),
+        ...Array(10).fill(dogWagGifPath),
         ...PHOTO_PATHS,
       ]}
     >

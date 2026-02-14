@@ -1,30 +1,44 @@
-// Insert Photos
-export const PHOTO_PATHS = [
-  "/photos/34thSt.JPG",
-  "/photos/gatsby.jpg",
-  "/photos/bambooForest.jpg",
-  "/photos/grandSt.jpg",
-  "/photos/japanDisney.JPG",
-  "/photos/miumiu.jpg",
-  "/photos/ryoken.JPG",
-  "/photos/zootopia.jpg",
-  "/photos/shinjuku.jpg",
-  "/photos/wedding.jpg",
-];
+function parseEnvUrlList(rawValue: string | undefined): string[] {
+  if (!rawValue?.trim()) return [];
 
-// Insert Backgrounds
-export const WORLD_PATHS = [
-  "/background/34th_background.webp",
-  "/background/9818_background.png",
-  "/background/bamboo_background.jpg",
-  "/background/grand_st_background.jpg",
-  "/background/toy_story_background.jpg",
-  "/background/miu_miu_background.jpg",
-  "/background/kyoto_onsen.jpg",
-  "/background/lower_east_side_background.jpg",
-  "/background/shinjuku_street.jpg",
-  "/background/wedding_background.png",
-];
+  const trimmed = rawValue.trim();
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((value) => String(value).trim())
+          .filter((value) => value.length > 0);
+      }
+    } catch {
+      // Fall back to delimiter parsing if JSON parsing fails.
+    }
+  }
+
+  return trimmed
+    .split(/[\n,]+/)
+    .map((value) => value.trim().replace(/^["']|["']$/g, ""))
+    .filter((value) => value.length > 0);
+}
+
+// Optional runtime injection via Vite env vars.
+// Supports either:
+// - comma/newline separated list
+// - JSON array string
+const runtimeEnv = (
+  import.meta as ImportMeta & { env?: Record<string, string | undefined> }
+).env;
+const envPhotoPaths = parseEnvUrlList(runtimeEnv?.VITE_PHOTO_URLS);
+const envWorldPaths = parseEnvUrlList(runtimeEnv?.VITE_WORLD_URLS);
+
+if (envPhotoPaths.length === 0 || envWorldPaths.length === 0) {
+  console.warn(
+    "Cloudinary URL lists are missing. Set VITE_PHOTO_URLS and VITE_WORLD_URLS in your env."
+  );
+}
+
+export const PHOTO_PATHS = envPhotoPaths;
+export const WORLD_PATHS = envWorldPaths;
 
 export const PHOTO_ROLL_COUNT = PHOTO_PATHS.length;
 
