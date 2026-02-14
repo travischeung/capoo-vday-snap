@@ -4,9 +4,13 @@ import {
   GATE_ACCESS_CODE,
   PHOTO_PATHS,
   TOKEN_DERIVATION_SECRET,
+  WORLD_PATHS,
 } from "./config";
 
 const CAPTIONS_STORAGE_KEY = "hvd-photo-captions";
+const SHOT_ALBUM_STORAGE_KEY = "hvd-shot-album";
+const PHOTO_INDEX_STORAGE_KEY = "hvd-next-photo-index";
+const SHOT_COUNT_STORAGE_KEY = "hvd-shot-count";
 
 function loadStoredCaptions() {
   if (typeof window === "undefined") return {};
@@ -18,6 +22,71 @@ function loadStoredCaptions() {
   } catch {
     return {};
   }
+}
+
+function loadStoredShotAlbum() {
+  if (typeof window === "undefined") return [];
+  try {
+    const rawValue = window.localStorage.getItem(SHOT_ALBUM_STORAGE_KEY);
+    if (!rawValue) return [];
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter(
+      (item) =>
+        item &&
+        typeof item === "object" &&
+        typeof item.shotNumber === "number" &&
+        typeof item.photoPath === "string" &&
+        typeof item.caption === "string"
+    );
+  } catch {
+    return [];
+  }
+}
+
+function upsertShotAlbumEntry(album, entry) {
+  const nextAlbum = [...album];
+  const existingIndex = nextAlbum.findIndex(
+    (item) => item.shotNumber === entry.shotNumber
+  );
+
+  if (existingIndex >= 0) {
+    nextAlbum[existingIndex] = { ...nextAlbum[existingIndex], ...entry };
+  } else {
+    nextAlbum.push(entry);
+  }
+
+  return nextAlbum.sort((a, b) => a.shotNumber - b.shotNumber).slice(0, 10);
+}
+
+function loadStoredPhotoIndex(photoCount) {
+  if (typeof window === "undefined") return 0;
+  if (!photoCount) return 0;
+
+  const rawValue = window.localStorage.getItem(PHOTO_INDEX_STORAGE_KEY);
+  const parsed = Number.parseInt(rawValue ?? "0", 10);
+  if (Number.isNaN(parsed)) return 0;
+
+  return ((parsed % photoCount) + photoCount) % photoCount;
+}
+
+function loadStoredShotCount() {
+  if (typeof window === "undefined") return 0;
+
+  const rawValue = window.localStorage.getItem(SHOT_COUNT_STORAGE_KEY);
+  const parsed = Number.parseInt(rawValue ?? "0", 10);
+  if (Number.isNaN(parsed) || parsed < 0) return 0;
+
+  return parsed;
+}
+
+function resetExperienceStorage() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(CAPTIONS_STORAGE_KEY);
+  window.localStorage.removeItem(SHOT_ALBUM_STORAGE_KEY);
+  window.localStorage.removeItem(PHOTO_INDEX_STORAGE_KEY);
+  window.localStorage.removeItem(SHOT_COUNT_STORAGE_KEY);
 }
 
 async function deriveToken(password) {
@@ -221,36 +290,88 @@ function GatePage() {
 }
 
 function GamePage() {
+  const navigate = useNavigate();
   const viewfinderRef = useRef(null);
   const shotIdRef = useRef(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [latestShot, setLatestShot] = useState(null);
-  const [captionsByPhoto, setCaptionsByPhoto] = useState(() =>
-    loadStoredCaptions()
+  const [shotAlbum, setShotAlbum] = useState(() =>
+    loadStoredShotAlbum()
   );
-  const [shotCount, setShotCount] = useState(0);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(() =>
+    loadStoredPhotoIndex(PHOTO_PATHS.length)
+  );
+  const [shotCount, setShotCount] = useState(() => loadStoredShotCount());
   const [flashCycle, setFlashCycle] = useState(0);
+  const currentCaption = latestShot
+    ? shotAlbum.find((entry) => entry.shotNumber === latestShot.shotNumber)
+        ?.caption ?? ""
+    : "";
+  const canReload = currentCaption.trim().length > 0;
+  const currentWorldPath = WORLD_PATHS.length
+    ? WORLD_PATHS[currentPhotoIndex % WORLD_PATHS.length]
+    : "";
 
   const triggerShutter = () => {
     if (latestShot) return;
+    if (shotCount >= 10) return;
     if (!PHOTO_PATHS.length) return;
 
-    const nextShotIndex = shotCount % PHOTO_PATHS.length;
-    const nextPhotoPath = PHOTO_PATHS[nextShotIndex];
+    const nextShotNumber = shotCount + 1;
+    const nextPhotoPath = PHOTO_PATHS[currentPhotoIndex];
     shotIdRef.current += 1;
 
-    setLatestShot({ id: shotIdRef.current, src: nextPhotoPath });
+    setLatestShot({
+      id: shotIdRef.current,
+      shotNumber: nextShotNumber,
+      src: nextPhotoPath,
+    });
+    setShotAlbum((previous) =>
+      upsertShotAlbumEntry(previous, {
+        shotNumber: nextShotNumber,
+        photoPath: nextPhotoPath,
+        caption: "",
+      })
+    );
     setShotCount((previous) => previous + 1);
     setFlashCycle((previous) => previous + 1);
   };
 
   useEffect(() => {
+    if (shotCount >= 10 && latestShot) {
+      navigate("/valentines");
+    }
+  }, [latestShot, navigate, shotCount]);
+
+  useEffect(() => {
+    if (shotCount < 10 || latestShot) return;
+
+    // If a completed run returns to /game, start a fresh run.
+    resetExperienceStorage();
+    setShotAlbum([]);
+    setCurrentPhotoIndex(0);
+    setShotCount(0);
+  }, [latestShot, shotCount]);
+
+  const handleReloadExperience = () => {
+    if (PHOTO_PATHS.length) {
+      const nextIndex = (currentPhotoIndex + 1) % PHOTO_PATHS.length;
+      window.localStorage.setItem(PHOTO_INDEX_STORAGE_KEY, String(nextIndex));
+      setCurrentPhotoIndex(nextIndex);
+    }
+
+    window.location.reload();
+  };
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(
-      CAPTIONS_STORAGE_KEY,
-      JSON.stringify(captionsByPhoto)
-    );
-  }, [captionsByPhoto]);
+    window.localStorage.setItem(SHOT_ALBUM_STORAGE_KEY, JSON.stringify(shotAlbum));
+  }, [shotAlbum]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(SHOT_COUNT_STORAGE_KEY, String(shotCount));
+  }, [shotCount]);
 
   useEffect(() => {
     if (latestShot) return undefined;
@@ -311,11 +432,21 @@ function GamePage() {
   }, [latestShot]);
 
   return (
-    <main className="game-world" onPointerDown={triggerShutter}>
+    <main
+      className="game-world"
+      style={
+        currentWorldPath
+          ? {
+              backgroundImage: `url(${currentWorldPath})`,
+            }
+          : undefined
+      }
+      onPointerDown={triggerShutter}
+    >
       <div className="game-hud">
         <Link to="/">Back to gate</Link>
         <p>Move to aim, then click or tap to snap a shot.</p>
-        <p className="shot-count">Shots taken: {shotCount}</p>
+        <p className="shot-count">Shots taken: {shotCount}/10</p>
       </div>
       {flashCycle > 0 ? <div key={flashCycle} className="shutter-flash" /> : null}
       {latestShot ? (
@@ -336,12 +467,15 @@ function GamePage() {
             </div>
             <textarea
               className="polaroid-caption-input"
-              value={captionsByPhoto[latestShot.src] ?? ""}
+              value={currentCaption}
               onChange={(event) =>
-                setCaptionsByPhoto((previous) => ({
-                  ...previous,
-                  [latestShot.src]: event.target.value,
-                }))
+                setShotAlbum((previous) =>
+                  upsertShotAlbumEntry(previous, {
+                    shotNumber: latestShot.shotNumber,
+                    photoPath: latestShot.src,
+                    caption: event.target.value,
+                  })
+                )
               }
               placeholder="Write a silly caption..."
               onPointerDown={(event) => event.stopPropagation()}
@@ -351,7 +485,8 @@ function GamePage() {
             type="button"
             className="reload-bubble-button"
             onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => window.location.reload()}
+            disabled={!canReload}
+            onClick={handleReloadExperience}
           >
             reload
           </button>
@@ -378,23 +513,36 @@ function GamePage() {
 }
 
 function ValentinesPage() {
-  const [captionsByPhoto, setCaptionsByPhoto] = useState(() =>
-    loadStoredCaptions()
+  const navigate = useNavigate();
+  const [shotAlbum, setShotAlbum] = useState(() =>
+    loadStoredShotAlbum()
   );
 
   useEffect(() => {
-    setCaptionsByPhoto(loadStoredCaptions());
+    setShotAlbum(loadStoredShotAlbum());
   }, []);
 
   return (
     <Layout title="Valentines">
       <p>Memory review from your photo experience:</p>
+      <div className="button-row">
+        <button
+          type="button"
+          onClick={() => {
+            resetExperienceStorage();
+            setShotAlbum([]);
+            navigate("/game");
+          }}
+        >
+          Back to game
+        </button>
+      </div>
       <div className="memory-review-grid">
-        {PHOTO_PATHS.map((photoPath, index) => (
-          <article key={photoPath} className="memory-review-card">
-            <img src={photoPath} alt={`Memory ${index + 1}`} />
+        {shotAlbum.map((entry) => (
+          <article key={entry.shotNumber} className="memory-review-card">
+            <img src={entry.photoPath} alt={`Memory ${entry.shotNumber}`} />
             <p className="memory-caption">
-              {captionsByPhoto[photoPath] || "No caption written yet."}
+              {entry.caption || "No caption written yet."}
             </p>
           </article>
         ))}
