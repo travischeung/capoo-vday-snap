@@ -1,4 +1,4 @@
-# Happy Valentine's Day
+# Happy Valentine's Day! Capoo Valentine's Day Snap (like pokemon snap)
 
 A playful React + Vite Valentine's web experience with:
 
